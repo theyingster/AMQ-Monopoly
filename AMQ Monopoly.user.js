@@ -94,26 +94,41 @@ mystery.push("Get out of Jail Free");
 mystery.push("Go back 3 tiles");
 mystery.push("Go to next bad tag :fearful:");
 
+let tags = ["Shoujo","Shounen","Magic","Idol","Male Protagonist","Female Protagonist","School","CGDCT"];
 let modifiers = [];
 
 
 let commandListener = new Listener("Game Chat Message", (payload) => {
-    if (payload.sender === selfName && payload.message.startsWith(command)) {
-        // roll the dice
-        roll();
-    }
-    else if (payload.sender === selfName && payload.message.startsWith("/Owner")) {
-        //update tile owner
-        sendChatMessage("Updating ownership...");
-        let message = payload.message.split(" ");
-        board[current].owner = message[1];
-        sendChatMessage("Done! " + message[1] + " is now the owner of the current tile.");
+    if (payload.sender === selfName) {
+        if (payload.message.startsWith(command)) {
+            // roll the dice
+            roll();
+        }
+        else if (payload.message.startsWith("/Owner")) {
+            //update tile owner
+            sendChatMessage("Updating ownership...");
+            let message = payload.message.split(" ");
+            board[current].owner = message[1];
+            sendChatMessage("Done! " + message[1] + " is now the owner of the current tile.");
+        }
+        else if (payload.message.startsWith("/NewGame")) {
+            clearBoard();
+        }
+        else if (payload.message.startsWith("/Current")) {
+            sendChatMessage("We are currently on tile " + current);
+        }
+        else if (payload.message.startsWith("/Add")) {
+            // manually move to tiles for debugging
+            let msg = payload.message.split(' ');
+            current += msg[1];
+        }
     }
 });
 
 
 // clear board after game is over
 function clearBoard(){
+    sendChatMessage("Clearing game board...");
     lives = 1;
     current = 0;
     modifiers = [];
@@ -186,10 +201,10 @@ function tileEventHandler(current){
         sendChatMessage("Song selection: Random");
         modifyMessage = "Song selection: Random";
     }
-    else if (tile.description === "Go To Jail"){
-        if (bail === true){
+    else if (tile.description === "Go to Jail"){
+        if (bail){
             sendChatMessage("You bailed yourself our with the free out-of-jail pass.");
-            bail = false;
+            bail = !bail;
             sendChatMessage("Rolling again...");
             roll();
         }
@@ -205,13 +220,13 @@ function tileEventHandler(current){
         sendChatMessage("Playback Speed x2");
         modifyMessage = "Playback Speed x2";
     }
-    if (current != 0 && !tile.description.startsWith("Just Visiting") && modifyMessage !== ""){
+    if (current != 0 && !tile.description.startsWith("Just Visiting") && modifyMessage !== "" && modifyMessage !== "Co-op with partner"){
         addModifier(modifyMessage);
         sendChatMessage("Rolling again...");
         roll();
     }
     else {
-        if (current != 0 && !tile.description.startsWith("Just Visiting")){
+        if (tags.indexOf(tile.description) >= 0){
             if (tile.owner !== ""){
                 let ownerLives = lives + 1;
                 let owner = tile.owner;
@@ -335,7 +350,7 @@ function updateCurrent(diceRoll) {
 function updateModifiers() {
     for (let i = 0; i < modifiers.length; i++){
         if (modifiers[i].rounds == 1){
-            if (modifiers[i].modifier === "Flying Pussyfoot"){
+            if (modifiers[i].modifier === "Everyone starts with 3 lives"){
                 lives = 1;
             }
             modifiers.shift();
