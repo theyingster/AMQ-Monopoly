@@ -33,7 +33,6 @@ let diceResult;
 let maxRoll = 6;
 let current = 0;
 let lives = 1;
-let bail = false;
 let board = [];
 board.push(new Tile("","Start Tile"));
 board.push(new Tile("","Female Protagonist"));
@@ -202,18 +201,10 @@ function tileEventHandler(current){
         modifyMessage = "Song selection: Random";
     }
     else if (tile.description === "Go to Jail"){
-        if (bail){
-            sendChatMessage("You bailed yourself our with the free out-of-jail pass.");
-            bail = !bail;
-            sendChatMessage("Rolling again...");
-            roll();
-        }
-        else {
-            sendChatMessage("You're in Jail, but since you're a cute anime girl, guards let you out but supervise you");
-            sendChatMessage("No dropdown");
-            modifyMessage = "No dropdown";
-        }
-
+        sendChatMessage("You're in Jail, but since you're a cute anime girl, guards let you out but supervise you");
+        sendChatMessage("No dropdown");
+        modifyMessage = "No dropdown";
+        current = 10;
     }
     else if (tile.description === "Kansei Durifto!?"){
         sendChatMessage("*Eurobeat intensifies*");
@@ -302,8 +293,8 @@ function handleMystery(diceResult, tile) {
         sendChatMessage("Caught by the cops...");
         current = 30;
     } else if (diceResult == 4){
-        sendChatMessage("You received a free out-of-jail pass!");
-        bail = true;
+        sendChatMessage("Vroom Vroom :blue_car:");
+        current = 20;
     } else if (diceResult == 5){
         sendChatMessage("Step back!");
         current -= 3;
