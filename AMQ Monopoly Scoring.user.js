@@ -48,7 +48,8 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
     }
     else if (payload.sender === selfName && payload.message.startsWith("/SetWinningScore")) {
         let message = payload.message.split(" ");
-        winningScore = message[1];
+        winningScore = parseInt(message[1]);
+        sendChatMessage("Winning score has been set to " + winningScore + ".");
     }
 });
 
@@ -59,7 +60,7 @@ function updateScore(player){
     displayScore();
     let winner = scores.indexOf(winningScore);
     if (winner >= 0){
-        sendChatMessage("Congrats! Player" + players[winner] + " has won!")
+        sendChatMessage("Congrats! Player " + players[winner] + " has won!");
     }
 }
 

@@ -99,7 +99,7 @@ let modifiers = [];
 
 let commandListener = new Listener("Game Chat Message", (payload) => {
     if (payload.sender === selfName) {
-        if (payload.message.startsWith(command)) {
+        if (lobby.inLobby && payload.message.startsWith(command)) {
             // roll the dice
             roll();
         }
@@ -214,7 +214,7 @@ function tileEventHandler(current){
     if (current != 0 && !tile.description.startsWith("Just Visiting") && modifyMessage !== "" && modifyMessage !== "Co-op with partner"){
         addModifier(modifyMessage);
         sendChatMessage("Rolling again...");
-        roll();
+        setTimeout(roll, 3000);
     }
     else {
         if (tags.indexOf(tile.description) >= 0){
@@ -238,7 +238,7 @@ function tileEventHandler(current){
             else {
                 sendChatMessage("Everyone: " + lives + " lives");
             }
-            displayModifiers();
+            setTimeout(displayModifiers, 3000);
             updateModifiers();
         }
     }
@@ -359,9 +359,6 @@ function displayModifiers(){
         sendChatMessage("None");
     }
     else{
-        /*for (let condition in modifiers){
-            sendChatMessage(condition.modifier + ": " + condition.rounds + " rounds left");
-        }*/
         for (let i = 0; i < modifiers.length; i++){
             sendChatMessage(modifiers[i].modifier + " - " + modifiers[i].rounds + " rounds left");
         }
