@@ -13,6 +13,7 @@ if (!window.setupDocumentDone) return;
 let command = "/Point";
 let create = "/Scoreboard";
 let help = "/Help";
+let winningScore = 0;
 let players = [];
 let scores = [];
 let round = 0;
@@ -43,6 +44,11 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
         sendChatMessage("1. /Point 'player' = give 'player' a point");
         sendChatMessage("2. /ResetScore = reset the scoreboard");
         sendChatMessage("3. /Scoreboard = create scoreboard before game starts");
+        sendChatMessage("4. /SetWinningScore 'number' = sets 'number' as the points needed to win");
+    }
+    else if (payload.sender === selfName && payload.message.startsWith("/SetWinningScore")) {
+        let message = payload.message.split(" ");
+        winningScore = message[1];
     }
 });
 
@@ -51,10 +57,14 @@ function updateScore(player){
     scores[index]++;
     round++;
     displayScore();
+    let winner = scores.indexOf(winningScore);
+    if (winner >= 0){
+        sendChatMessage("Congrats! Player" + players[winner] + " has won!")
+    }
 }
 
 function displayScore(){
-    sendChatMessage("Current Standings:");
+    sendChatMessage("Current Standings (Round " + round + "):");
     for (let i = 0; i < players.length; i++) {
         sendChatMessage("@" + players[i] + ": " + scores[i] + " pts");
     }

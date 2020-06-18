@@ -30,7 +30,7 @@ class Condition {
 
 let command = "/Dice";
 let diceResult;
-let maxRoll = 12;
+let maxRoll = 6;
 let current = 0;
 let lives = 1;
 let bail = false;
@@ -325,8 +325,10 @@ function handleMystery(diceResult, tile) {
 
 // roll the dice
 function roll(){
+    let diceResult2 = getRandomIntInclusive(1, maxRoll);
     diceResult = getRandomIntInclusive(1, maxRoll);
-    sendChatMessage("rolls " + diceResult);
+    sendChatMessage("rolls " + diceResult + " and " + diceResult2);
+    diceResult += diceResult2;
     updateCurrent(diceResult);
     tileEventHandler(current);
 }
