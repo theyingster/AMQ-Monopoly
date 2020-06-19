@@ -12,4 +12,4 @@ Requires [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/d
 
 ## Current Version
 
-Currently requires manually inputting commands into chat and needs both scripts for playing and scoring. I am working on integrating auto-changing settings without manual commands from the host player.
+Currently requires manually inputting commands into chat and needs both scripts for playing and scoring. I am working on integrating auto-changing settings without manual commands from the host player (testing through the change_settings.user.js file).
