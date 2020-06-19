@@ -80,7 +80,7 @@ let gacha = [];
 gacha.push("Song difficulty: 0-60");
 gacha.push("Remove all tags");
 gacha.push("Guess time: 30 seconds");
-gacha.push("Time range: 2000-2020");
+gacha.push("Year range: 2000-2020");
 gacha.push("Song popularity: Liked");
 gacha.push("Anime score: 7-10");
 
@@ -119,7 +119,11 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
         else if (payload.message.startsWith("/Add")) {
             // manually move to tiles for debugging
             let msg = payload.message.split(' ');
-            current += msg[1];
+            current += parseInt(msg[1],10);
+        }
+        else if (payload.message.startsWith("/Test")) {
+            // test event handlling on current tile for debugging
+            tileEventHandler(current);
         }
     }
 });
@@ -145,7 +149,7 @@ function tileEventHandler(current){
 
     if (current == 0 || tile.description.startsWith("Just Visiting")){
         sendChatMessage("Rolling again...");
-        roll();
+        setTimeout(roll, 3000);
     }
     else if (tile.description.startsWith("Gacha")){
         sendChatMessage("Time for RNGesus :pray:");
@@ -166,8 +170,8 @@ function tileEventHandler(current){
     }
     else if (tile.description === "Ugly Bastard"){
         sendChatMessage("We can't escape Ugly Bastard.");
-        sendChatMessage("Song Difficulty: 0-20");
-        modifyMessage = "Song Difficulty: 0-20";
+        sendChatMessage("Song difficulty: 0-20");
+        modifyMessage = "Song difficulty: 0-20";
     }
     else if (tile.description === "Drugs"){
         sendChatMessage("Drugs are bad kids, don't do drugs.");
@@ -178,6 +182,7 @@ function tileEventHandler(current){
         sendChatMessage("Everyone gets to choose a partner to coop with. First come, first served.");
         sendChatMessage("Choose your partner now!");
         modifyMessage = "Co-op with partner";
+        addModifier(modifyMessage);
     }
     else if (tile.description === "APT-kun"){
         sendChatMessage("Since APT-kun is a training wagon and not meant to be commonly used");
@@ -238,7 +243,7 @@ function tileEventHandler(current){
             else {
                 sendChatMessage("Everyone: " + lives + " lives");
             }
-            setTimeout(displayModifiers, 3000);
+            displayModifiers();
             updateModifiers();
         }
     }
@@ -246,7 +251,12 @@ function tileEventHandler(current){
 
 function addModifier(message){
     for (let i = 0; i < modifiers.length; i++){
-        if (modifiers[i].modifier === message){
+        let modifier = modifiers[i].modifier;
+        if (modifier === message ||
+            (modifier.startsWith("Year range") && message.startsWith("Year range")) ||
+            (modifier.startsWith("Song difficulty") && message.startsWith("Song difficulty")) ||
+            (modifier.startsWith("Guess time") && message.startsWith("Guess time"))
+           ){
             modifiers.splice(i,1);
             break;
         }
@@ -318,9 +328,9 @@ function handleMystery(diceResult, tile) {
 function roll(){
     let diceResult2 = getRandomIntInclusive(1, maxRoll);
     diceResult = getRandomIntInclusive(1, maxRoll);
-    sendChatMessage("rolls " + diceResult + " and " + diceResult2);
-    diceResult += diceResult2;
-    updateCurrent(diceResult);
+    let sum = diceResult2 + diceResult;
+    sendChatMessage("rolls " + diceResult + " & " + diceResult2 + " -> " + sum);
+    updateCurrent(sum);
     tileEventHandler(current);
 }
 
