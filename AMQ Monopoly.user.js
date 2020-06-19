@@ -33,6 +33,8 @@ let diceResult;
 let maxRoll = 6;
 let current = 0;
 let lives = 1;
+
+// the monopoly board
 let board = [];
 board.push(new Tile("","Start Tile"));
 board.push(new Tile("","Female Protagonist"));
