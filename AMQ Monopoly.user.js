@@ -230,6 +230,7 @@ function tileEventHandler(current){
                 let owner = tile.owner;
                 let description = tile.description;
                 let filteredTiles = board.filter(checkOwnerShip);
+                filteredTiles = filteredTiles.filter(checkTile);
                 if (description === "Shoujo" || description === "Shounen" ||
                     description === "CGDCT" || description === "Magic" ||
                     description === "School") {
@@ -264,6 +265,10 @@ function addModifier(message){
         }
     }
     modifiers.push(new Condition(message , 3 ));
+}
+
+function checkTile(tile){
+    return tile.description === board[current].description;
 }
 
 function checkOwnerShip(tile){
