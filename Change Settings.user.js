@@ -69,7 +69,6 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
             else if (payload.message === "/kansei durifto!?"){
                 changeSpeed();
             }
-            setTimeout(lobby.changeGameSettings, 2000);
             //else if (payload.message === "randomizing..."){
               //  randomize();
                 //lobby.changeGameSettings();
@@ -82,12 +81,13 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
 function changeSpeed(){
     hostModal.playbackSpeedRandomSwitch.setOn(false);
     hostModal.$playbackSpeed.slider('setValue', 2);
-    lobby.changeGameSettings();
+    setTimeout(lobby.changeGameSettings, 2000);
 }
 
 function randomize(){
    //hostModal.$RANDOMIZE_BUTTON.click();
    hostModal.changeSettings(settingRandomizer.getRandomQuizSettings());
+   setTimeout(lobby.changeGameSettings, 2000);
 }
 
 function changeSettings(){
