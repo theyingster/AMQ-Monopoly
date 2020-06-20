@@ -33,49 +33,51 @@ let diceResult;
 let maxRoll = 6;
 let current = 0;
 let lives = 1;
-
-// the monopoly board
 let board = [];
-board.push(new Tile("","Start Tile"));
-board.push(new Tile("","Female Protagonist"));
-board.push(new Tile("","Gacha: Bang Dream!"));
-board.push(new Tile("","Female Protagonist"));
-board.push(new Tile("","NTR"));
-board.push(new Tile("","Galaxy Express 999"));
-board.push(new Tile("","Magic"));
-board.push(new Tile("","Trap Card"));
-board.push(new Tile("","Magic"));
-board.push(new Tile("","Magic"));
-board.push(new Tile("","Just Visiting"));
-board.push(new Tile("","Idol"));
-board.push(new Tile("","Ugly Bastard"));
-board.push(new Tile("","Idol"));
-board.push(new Tile("","Idol"));
-board.push(new Tile("","Kotetsujou"));
-board.push(new Tile("","Shounen"));
-board.push(new Tile("","Gacha: Fate Grand Order"));
-board.push(new Tile("","Shounen"));
-board.push(new Tile("","Shounen"));
-board.push(new Tile("","Kansei Durifto!?"));
-board.push(new Tile("","CGDCT"));
-board.push(new Tile("","ARTS (whatever the fuck that means)"));
-board.push(new Tile("","CGDCT"));
-board.push(new Tile("","CGDCT"));
-board.push(new Tile("","APT-kun"));
-board.push(new Tile("","Shoujo"));
-board.push(new Tile("","Shoujo"));
-board.push(new Tile("","Drugs"));
-board.push(new Tile("","Shoujo"));
-board.push(new Tile("","Go to Jail"));
-board.push(new Tile("","School"));
-board.push(new Tile("","School"));
-board.push(new Tile("","Gacha: Granblue Fantasy"));
-board.push(new Tile("","School"));
-board.push(new Tile("","Flying Pussyfoot"));
-board.push(new Tile("","Counter!"));
-board.push(new Tile("","Male Protagonist"));
-board.push(new Tile("","RAPE!!"));
-board.push(new Tile("","Male Protagonist"));
+
+function initializeBoard(){
+    board.push(new Tile("","Start Tile"));
+    board.push(new Tile("",chosenTags[0]));
+    board.push(new Tile("","Gacha: Bang Dream!"));
+    board.push(new Tile("",chosenTags[0]));
+    board.push(new Tile("","NTR"));
+    board.push(new Tile("","Galaxy Express 999"));
+    board.push(new Tile("",chosenTags[1]));
+    board.push(new Tile("","Trap Card"));
+    board.push(new Tile("",chosenTags[1]));
+    board.push(new Tile("",chosenTags[1]));
+    board.push(new Tile("","Just Visiting"));
+    board.push(new Tile("",chosenTags[2]));
+    board.push(new Tile("","Ugly Bastard"));
+    board.push(new Tile("",chosenTags[2]));
+    board.push(new Tile("",chosenTags[2]));
+    board.push(new Tile("","Kotetsujou"));
+    board.push(new Tile("",chosenTags[3]));
+    board.push(new Tile("","Gacha: Fate Grand Order"));
+    board.push(new Tile("",chosenTags[3]));
+    board.push(new Tile("",chosenTags[3]));
+    board.push(new Tile("","Kansei Durifto!?"));
+    board.push(new Tile("",chosenTags[4]));
+    board.push(new Tile("","ARTS (whatever the fuck that means)"));
+    board.push(new Tile("",chosenTags[4]));
+    board.push(new Tile("",chosenTags[4]));
+    board.push(new Tile("","APT-kun"));
+    board.push(new Tile("",chosenTags[5]));
+    board.push(new Tile("",chosenTags[5]));
+    board.push(new Tile("","Drugs"));
+    board.push(new Tile("",chosenTags[5]));
+    board.push(new Tile("","Go to Jail"));
+    board.push(new Tile("",chosenTags[6]));
+    board.push(new Tile("",chosenTags[6]));
+    board.push(new Tile("","Gacha: Granblue Fantasy"));
+    board.push(new Tile("",chosenTags[6]));
+    board.push(new Tile("","Flying Pussyfoot"));
+    board.push(new Tile("","Counter!"));
+    board.push(new Tile("",chosenTags[7]));
+    board.push(new Tile("","RAPE!!"));
+    board.push(new Tile("",chosenTags[7]));
+}
+
 
 // Gacha tiles
 let gacha = [];
@@ -95,15 +97,24 @@ mystery.push("Get out of Jail Free");
 mystery.push("Go back 3 tiles");
 mystery.push("Go to next bad tag :fearful:");
 
-let tags = ["Shoujo","Shounen","Magic","Idol","Male Protagonist","Female Protagonist","School","CGDCT"];
+let tags = ["Female Protagonist","Magic","Idol","Shounen","CGDCT","Shoujo","School","Male Protagonist",
+           "Seinen","Josei","Iyashikei","Tragedy","Super Power","Military","Harem","Historical","Parody",
+           "Space","Aliens","Animals","Kids","Politics"];
+let defaultTags = ["Female Protagonist","Magic","Idol","Shounen","CGDCT","Shoujo","School","Male Protagonist"];
+let chosenTags = [];
 let modifiers = [];
 
 
 let commandListener = new Listener("Game Chat Message", (payload) => {
     if (payload.sender === selfName) {
         if (lobby.inLobby && payload.message.startsWith(command)) {
-            // roll the dice
-            roll();
+            if (board.length == 0) {
+                sendChatMessage("Please choose your tags first through '/ChooseTags'");
+            }
+            else {
+                // roll the dice
+                roll();
+            }
         }
         else if (payload.message.startsWith("/Owner")) {
             //update tile owner
@@ -122,13 +133,63 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
             // manually move to tiles for debugging
             let msg = payload.message.split(' ');
             current += parseInt(msg[1],10);
+            current %= 40;
         }
         else if (payload.message.startsWith("/Test")) {
             // test event handlling on current tile for debugging
             tileEventHandler(current);
         }
+        else if (payload.message.startsWith("/ChooseTags")){
+            showTags();
+        }
+        else if (payload.message.startsWith("/Choosing")){
+            if (board.length != 0) {
+                sendChatMessage("Please use '/NewGame' to clear the board as the current script does not currently support rechoosing tags :(");
+            }
+            else {
+                let chosen = payload.message.split(" ");
+                chosen.shift();
+                setTags(chosen);
+            }
+        }
+        else if (payload.message.startsWith("/Default")){
+            setDefault();
+        }
     }
 });
+
+// display tags that can be chosen
+function showTags(){
+    sendChatMessage("List of Monopoly tags:")
+    for (let i = 1; i <= tags.length; i++){
+        sendChatMessage( i + ") " + tags[i-1]);
+    }
+    sendChatMessage("Use '/Choosing a b ... c' to select 8 different tags by numbering with a space between each for the game");
+    sendChatMessage("Use '/Default' for Wolf's original tags...");
+    sendChatMessage("Note: The order of tags on the board will be the same as the order chosen.");
+}
+
+// Set the current tags to be the chosen tags
+function setTags(chosen){
+    sendChatMessage("The tags chosen are:");
+    let desc;
+    for (let i = 0; i < chosen.length; i++){
+        let index = parseInt(chosen[i],10);
+        desc = tags[index - 1];
+        chosenTags[i] = desc;
+        sendChatMessage(index + ") " + desc);
+    }
+    initializeBoard();
+    sendChatMessage("Ready for dice roll...");
+}
+
+function setDefault(){
+    for (let i = 0; i < defaultTags.length; i++){
+        chosenTags[i] = defaultTags[i];
+    }
+    initializeBoard();
+    sendChatMessage("Ready for dice roll...");
+}
 
 
 // clear board after game is over
@@ -137,10 +198,8 @@ function clearBoard(){
     lives = 1;
     current = 0;
     modifiers = [];
-    for (let i = 0; i < board.length; i++){
-        board[i].owner = "";
-    }
-    sendChatMessage("Everything cleared! Ready for new game.");
+    board = [];
+    sendChatMessage("Everything cleared! Ready for new game... Please rechoose tags.");
 }
 
 // handles event triggered by moving onto the current tile
@@ -231,9 +290,7 @@ function tileEventHandler(current){
                 let description = tile.description;
                 let filteredTiles = board.filter(checkOwnerShip);
                 filteredTiles = filteredTiles.filter(checkTile);
-                if (description === "Shoujo" || description === "Shounen" ||
-                    description === "CGDCT" || description === "Magic" ||
-                    description === "School") {
+                if (chosenTags.indexOf(description) > 0 && chosenTags.indexOf(description) < 7) {
                     if (filteredTiles.length === 3){
                         ownerLives ++;
                     }
@@ -270,6 +327,7 @@ function addModifier(message){
 function checkTile(tile){
     return tile.description === board[current].description;
 }
+
 
 function checkOwnerShip(tile){
     return tile.owner === board[current].owner;
