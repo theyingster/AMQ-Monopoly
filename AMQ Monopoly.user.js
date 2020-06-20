@@ -348,7 +348,7 @@ function sendChatMessage(message) {
 }
 
 function updateCurrent(diceRoll) {
-    current += diceResult;
+    current += diceRoll;
     current %= 40;
 }
 
