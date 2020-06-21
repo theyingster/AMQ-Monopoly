@@ -21,21 +21,22 @@ let round = 0;
 // listener for commands in chat
 let commandListener = new Listener("Game Chat Message", (payload) => {
     if (payload.sender === selfName && payload.message.startsWith(command)) {
-
-        // give the winner of the round a point
-        for (let playerId in lobby.players) {
-            players.push(lobby.players[playerId]._name);
+        if (players.length == 0){
+            sendChatMessage("Please create a scoreboard first using 'Scoreboard'");
         }
+        // give the winner of the round a point
         let message = payload.message.split(" ");
         updateScore(message[1]);
-        players = [];
     }
     else if (payload.sender === selfName && payload.message.startsWith("/ResetScore")) {
         resetScore();
     }
     else if (payload.sender === selfName && payload.message.startsWith(create)) {
         sendChatMessage("Creating Scoreboard...");
+        players = [];
+        scores = [];
         for (let playerId in lobby.players) {
+            players.push(lobby.players[playerId]._name);
             scores.push(0);
         }
         sendChatMessage("Done!");
