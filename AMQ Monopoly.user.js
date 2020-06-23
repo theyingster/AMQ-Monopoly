@@ -78,6 +78,8 @@ function initializeBoard(){
     board.push(new Tile("",chosenTags[7]));
 }
 
+let OVERLAP_MODS = ["Playback","Guess time:","Song diff","Song pop"];
+
 
 // Gacha tiles
 let gacha = [];
@@ -97,12 +99,27 @@ mystery.push("Get out of Jail Free");
 mystery.push("Go back 3 tiles");
 mystery.push("Go to next bad tag :fearful:");
 
-let tags = ["Female Protagonist","Magic","Idol","Shounen","CGDCT","Shoujo","School","Male Protagonist",
+let tags = ["Female Protagonist","Magic","Idol","Shounen","Cute Girls Doing Cute Things","Shoujo","School","Male Protagonist",
            "Seinen","Josei","Iyashikei","Tragedy","Super Power","Military","Harem","Historical","Parody",
            "Space","Aliens","Animals","Kids","Politics"];
-let defaultTags = ["Female Protagonist","Magic","Idol","Shounen","CGDCT","Shoujo","School","Male Protagonist"];
+let defaultTags = ["Female Protagonist","Magic","Idol","Shounen","Cute Girls Doing Cute Things","Shoujo","School","Male Protagonist"];
 let chosenTags = [];
 let modifiers = [];
+
+let _endResultListener = new Listener("quiz end result", function (payload) {
+    // TODO auto add point to winner
+    //sendChatMessage("zzz");
+    /*
+    for (let player in quiz.players){
+        sendChatMessage("player " + player.name + ": " + player.points + " points");
+        if (player && player.finalPosition == 1){
+            updateScore(player.name());
+        }
+    }*/
+
+});
+
+_endResultListener.bindListener();
 
 
 let commandListener = new Listener("Game Chat Message", (payload) => {
@@ -124,6 +141,17 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
             sendChatMessage("Done! " + message[1] + " is now the owner of the current tile.");
         }
         else if (payload.message.startsWith("/NewGame")) {
+            hostModal.selectLastMan();
+            hostModal.changeSettings(DEFAULT_SETTINGS);
+            setTimeout(() => { lobby.changeGameSettings(); },1);
+            sendChatMessage("Creating Scoreboard...");
+            players = [];
+            scores = [];
+            for (let playerId in lobby.players) {
+                players.push(lobby.players[playerId]._name);
+                scores.push(0);
+            }
+            sendChatMessage("Done!");
             clearBoard();
         }
         else if (payload.message.startsWith("/Current")) {
@@ -154,6 +182,36 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
         }
         else if (payload.message.startsWith("/Default")){
             setDefault();
+        }
+        else if (payload.message.startsWith(pointCommand)) {
+            if (players.length == 0){
+                sendChatMessage("Please create a scoreboard first using 'Scoreboard'");
+            }
+            // give the winner of the round a point
+            let message = payload.message.split(" ");
+            updateScore(message[1]);
+        }
+        else if (payload.message.startsWith("/sub")) {
+            if (players.length == 0){
+                sendChatMessage("Please create a scoreboard first using 'Scoreboard'");
+            }
+            // give the winner of the round a point
+            let message = payload.message.split(" ");
+            subtractScore(message[1]);
+        }
+        else if (payload.message.startsWith("/ResetScore")) {
+            resetScore();
+        }
+        else if (payload.message.startsWith(help)) {
+            sendChatMessage("1. /Point 'player' = give 'player' a point");
+            sendChatMessage("2. /ResetScore = reset the scoreboard");
+            sendChatMessage("3. /NewGame = clear the board and create scoreboard before game starts");
+            sendChatMessage("4. /SetWinningScore 'number' = sets 'number' as the points needed to win");
+        }
+        else if (payload.message.startsWith("/SetWinningScore")) {
+            let message = payload.message.split(" ");
+            winningScore = parseInt(message[1]);
+            sendChatMessage("Winning score has been set to " + winningScore + ".");
         }
     }
 });
@@ -228,16 +286,21 @@ function tileEventHandler(current){
         sendChatMessage("Yameteeeeee!!!");
         sendChatMessage("Rape settings: Quiz settings Randomized");
         modifyMessage = "Quiz settings Randomized";
+        randomize();
     }
     else if (tile.description === "Ugly Bastard"){
         sendChatMessage("We can't escape Ugly Bastard.");
         sendChatMessage("Song difficulty: 0-20");
         modifyMessage = "Song difficulty: 0-20";
+        curDiffRange = [0,20];
+        setDifficulty(curDiffRange);
     }
     else if (tile.description === "Drugs"){
         sendChatMessage("Drugs are bad kids, don't do drugs.");
         sendChatMessage("Guess time: 10 seconds");
         modifyMessage = "Guess time: 10 seconds";
+        curGuessTime = 10;
+        setGuessTime(curGuessTime);
     }
     else if (tile.description === "NTR"){
         sendChatMessage("Everyone gets to choose a partner to coop with. First come, first served.");
@@ -249,6 +312,8 @@ function tileEventHandler(current){
         sendChatMessage("Since APT-kun is a training wagon and not meant to be commonly used");
         sendChatMessage("Show type: no TV");
         modifyMessage = "Show type: no TV";
+        tv = false;
+        changeTVSelection(tv);
     }
     else if (tile.description === "Flying Pussyfoot"){
         sendChatMessage("Baccano! characters are immortal");
@@ -260,11 +325,15 @@ function tileEventHandler(current){
         sendChatMessage("\"Back in my days, anime wasn't only isekai trash\"");
         sendChatMessage("Year range: 1950-2000");
         modifyMessage = "Year range: 1950-2000";
+        curYearRange = [1950,2000]
+        setYears(curYearRange);
     }
     else if (tile.description === "Kotetsujou"){
         sendChatMessage("Kabaneri was a clusterfuck, there's no better settings to describe it than this.");
         sendChatMessage("Song selection: Random");
         modifyMessage = "Song selection: Random";
+        curType = 1;
+        setSongSelection(curType);
     }
     else if (tile.description === "Go to Jail"){
         sendChatMessage("You're in Jail, but since you're a cute anime girl, guards let you out but supervise you");
@@ -276,6 +345,8 @@ function tileEventHandler(current){
         sendChatMessage("*Eurobeat intensifies*");
         sendChatMessage("Playback Speed x2");
         modifyMessage = "Playback Speed x2";
+        curSpeed = 2;
+        setSpeed(curSpeed);
     }
     if (current != 0 && !tile.description.startsWith("Just Visiting") && modifyMessage !== "" && modifyMessage !== "Co-op with partner"){
         addModifier(modifyMessage);
@@ -298,13 +369,20 @@ function tileEventHandler(current){
                 else if (filteredTiles.length === 2){
                     ownerLives ++;
                 }
+                setLives(ownerLives);
                 sendChatMessage(owner + ": " + ownerLives + " lives, everyone else " + lives + " lives");
             }
             else {
+                setLives(lives);
                 sendChatMessage("Everyone: " + lives + " lives");
             }
+            if (!tagless){
+                curTag = tile.description;
+            }
+            setTag();
             displayModifiers();
-            updateModifiers();
+            setTimeout(() => { lobby.changeGameSettings(); },1);
+            setTimeout(() => { updateModifiers(); },1);
         }
     }
 }
@@ -336,16 +414,27 @@ function checkOwnerShip(tile){
 function handleGacha(diceResult) {
     if (diceResult == 1){
         sendChatMessage("Let's make it easier with 0-60 difficulty!");
+        curDiffRange = [0,60];
+        setDifficulty(curDiffRange);
     } else if (diceResult == 2){
         sendChatMessage("Who wants tags? No one.");
+        tagless = true;
+        curTag = "";
     } else if (diceResult == 3){
         sendChatMessage("Brain too slow? No problem.");
+        curGuessTime = 30;
+        setGuessTime(curGuessTime);
     } else if (diceResult == 4){
         sendChatMessage("No boomers only zoomers.");
+        curYearRange = [2000,2020]
+        setYears(curYearRange);
     } else if (diceResult == 5){
         sendChatMessage("Get those trash songs out :wave:");
+        setLiked(); // no disliked, no mixed, only liked
     } else {
         sendChatMessage("Get those obscure sht out :wave:");
+        curAnimeScore = [7,10];
+        setAnimeScore();
     }
 }
 
@@ -418,14 +507,96 @@ function updateCurrent(diceRoll) {
 function updateModifiers() {
     for (let i = 0; i < modifiers.length; i++){
         if (modifiers[i].rounds == 1){
-            if (modifiers[i].modifier === "Everyone starts with 3 lives"){
+            let modDescription = modifiers[i].modifier;
+            if (modifiers.filter(hasRandomize).length == 0){
+                if (modDescription.startsWith("Song difficulty")){
+                    curDiffRange = [0,40];
+                    setDifficulty(curDiffRange);
+                }
+                if (modDescription === "Playback Speed x2"){
+                    curSpeed = 1;
+                    setSpeed(curSpeed);
+                }
+                else if (modDescription === "Song popularity: Liked"){
+                    resetSongPop();
+                }
+                if (modDescription.startsWith("Guess time")){
+                    curGuessTime = 20;
+                    setGuessTime(curGuessTime);
+                }
+                if (modDescription.startsWith("Year range")){
+                    curYearRange = [1950,2020];
+                    setYears(curYearRange);
+                }
+            }
+            else if (modDescription === "Quiz settings Randomized"){
+                hostModal.changeSettings(QUIZ_DEFAULT_SETTINGS);
+                for (let condition of modifiers){
+                    let description = condition.modifier;
+                    if (hasOverlapWithRandom(description)){
+                        // OVERLAP_MODS = ["Playback","Guess time:","Song diff","Song pop"];
+                        if (description.startsWith(OVERLAP_MODS[0])){
+                            curSpeed = 2;
+                            setSpeed(curSpeed);
+                        }
+                        else if (description.startsWith(OVERLAP_MODS[1])){
+                            if (description.indexOf("30") >= 0){
+                                curGuessTime = 30;
+                            }
+                            else {
+                                curGuessTime = 10;
+                            }
+                            setGuessTime(curGuessTime);
+                        }
+                        else if (description.startsWith(OVERLAP_MODS[2])){
+                            if (description.indexOf("0-20") >= 0){
+                                curDiffRange = [0,20];
+                            }
+                            else {
+                                curDiffRange = [0,60];
+                            }
+                            setDifficulty(curDiffRange);
+                        }
+                        else {
+                            setLiked();
+                        }
+                    }
+                }
+            }
+            if (modDescription === "Everyone starts with 3 lives"){
                 lives = 1;
+            }
+            else if (modDescription === "Anime score: 7-10"){
+                curAnimeScore = [2,10];
+                setAnimeScore();
+            }
+            else if (modDescription.startsWith("Show type:")){
+                tv = true;
+                changeTVSelection(tv);
+            }
+            else if (modDescription === "Remove all tags"){
+                tagless = false;
+            }
+            else if (modDescription.startsWith("Song selection")){
+                curType = 1;
+                setSongSelection(curType);
             }
             modifiers.shift();
             i--;
         }
         else modifiers[i].rounds--;
     }
+}
+
+function hasOverlapWithRandom(description){
+    return description.startsWith(OVERLAP_MODS[0]) ||
+        description.startsWith(OVERLAP_MODS[1]) ||
+        description.startsWith(OVERLAP_MODS[2]) ||
+        description.startsWith(OVERLAP_MODS[3]);
+}
+
+function hasRandomize(condition){
+    return condition.modifier === "Quiz settings Randomized";
 }
 
 function displayModifiers(){
@@ -442,6 +613,382 @@ function displayModifiers(){
 }
 
 commandListener.bindListener();
+
+///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+// AMQ MONOPOLY SCORING
+///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+
+let pointCommand = "/Point";
+let help = "/Help";
+let winningScore = 0;
+let players = [];
+let scores = [];
+let round = 0;
+
+function updateScore(player){
+    let index = players.indexOf(player);
+    scores[index]++;
+    round++;
+    displayScore();
+    let winner = scores.indexOf(winningScore);
+    if (winner >= 0){
+        sendChatMessage("Congrats! Player " + players[winner] + " has won!");
+    }
+}
+
+function subtractScore(player){
+    let index = players.indexOf(player);
+    scores[index]--;
+    displayScore();
+}
+
+function displayScore(){
+    sendChatMessage("Current Standings (Round " + round + "):");
+    for (let i = 0; i < players.length; i++) {
+        sendChatMessage("@" + players[i] + ": " + scores[i] + " pts");
+    }
+}
+
+function resetScore(){
+    sendChatMessage("Resetting scores...");
+    for (let i = 0; i < scores.length; i++){
+        scores[i] = 0;
+    }
+    sendChatMessage("Scores have been reset.");
+}
+
+///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+// AMQ MONOPOLY Setting Changing Functions & Variables
+///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+
+let DEFAULT_SETTINGS = {
+		roomName: "testing",
+		privateRoom: false,
+		password: "",
+		roomSize: lobby.players.length,
+		numberOfSongs: 100,
+		modifiers: {
+			skipGuessing: true,
+			skipReplay: true,
+			queueing: true,
+			duplicates: true,
+			lootDropping: true
+		},
+		songSelection: {
+			advancedOn: false,
+			standardValue: 3,
+			advancedValue: {
+				watched: 20,
+				unwatched: 0,
+				random: 0
+			}
+		},
+		showSelection: {
+			watched: 100,
+			unwatched: 0,
+			random: 0
+		},
+		songType: {
+			advancedOn: false,
+			standardValue: {
+				openings: true,
+				endings: true,
+				inserts: true
+			},
+			advancedValue: {
+				openings: 0,
+				endings: 0,
+				inserts: 0,
+				random: 100
+			}
+		},
+		guessTime: {
+			randomOn: false,
+			standardValue: 20,
+			randomValue: [5, 60]
+		},
+		inventorySize: {
+			randomOn: false,
+			standardValue: 20,
+			randomValue: [1, 99]
+		},
+		lootingTime: {
+			randomOn: false,
+			standardValue: 90,
+			randomValue: [10, 150]
+		},
+		lives: 1,
+		samplePoint: {
+			randomOn: true,
+			standardValue: 1,
+			randomValue: [0, 100]
+		},
+		playbackSpeed: {
+			randomOn: false,
+			standardValue: 1,
+			randomValue: [true, true, true, true]
+		},
+		songDifficulity: {
+			advancedOn: true,
+			standardValue: {
+				easy: true,
+				medium: true,
+				hard: true
+			},
+			advancedValue: [0, 40]
+		},
+		songPopularity: {
+			advancedOn: false,
+			standardValue: {
+				disliked: true,
+				mixed: true,
+				liked: true
+			},
+			advancedValue: [0, 100]
+		},
+		playerScore: {
+			advancedOn: false,
+			standardValue: [1, 10],
+			advancedValue: [true, true, true, true, true, true, true, true, true, true]
+		},
+		animeScore: {
+			advancedOn: false,
+			standardValue: [2, 10],
+			advancedValue: [true, true, true, true, true, true, true, true, true]
+		},
+		vintage: {
+			standardValue: {
+				years: [1950, 2020],
+				seasons: [0, 3],
+			},
+			advancedValueList: []
+		},
+		type: {
+			tv: true,
+			movie: true,
+			ova: true,
+			ona: true,
+			special: true
+		},
+		genre: [],
+		tags: []
+	};
+
+let QUIZ_DEFAULT_SETTINGS = {
+    guessTime: {
+			randomOn: false,
+			standardValue: 20,
+			randomValue: [5, 60]
+		},
+    lives: 1,
+		samplePoint: {
+			randomOn: true,
+			standardValue: 1,
+			randomValue: [0, 100]
+		},
+		playbackSpeed: {
+			randomOn: false,
+			standardValue: 1,
+			randomValue: [true, true, true, true]
+		},
+		songDifficulity: {
+			advancedOn: true,
+			standardValue: {
+				easy: true,
+				medium: true,
+				hard: true
+			},
+			advancedValue: [0, 40]
+		},
+		songPopularity: {
+			advancedOn: false,
+			standardValue: {
+				disliked: true,
+				mixed: true,
+				liked: true
+			},
+			advancedValue: [0, 100]
+		},
+};
+
+// difficulty ranges and types
+//let typeRanges = []; // difficulty ranges for each type (openings, endings and inserts) (eg. [[10, 50], [50, 80], [53, 89]])
+let curDiffRange = [0, 40]; // current selected difficulty
+let curType = 3; // current selected type of song (op/ed/in)
+
+//let yearRanges = []; // year ranges array for counting by years
+let curYearRange = [1950, 2020]; // default year range
+let curSpeed = 1; // default 1x playback speed
+let tv = true;
+let curGuessTime = 20;
+let curTag;
+
+// difficulty sliders
+let openingsDiffSlider;
+let endingsDiffSlider;
+let insertsDiffSlider;
+
+// check if the tagless modifier is active
+let tagless = false;
+let curAnimeScore = [2,10];
+
+// listen for when room settings change
+let settingsChangeListener = new Listener("Room Settings Changed", payload => {
+    hostModal.changeSettings(payload);
+    Object.keys(payload).forEach(key => {
+        let newValue = payload[key];
+        let oldValue = lobby.settings[key];
+        lobby.settings[key] = newValue;
+    });
+
+    if (payload.roomSize) {
+        lobby.settings.roomSize = payload.roomSize;
+    }
+
+    Object.values(lobby.players).forEach(player => {
+        player.ready = false;
+    });
+
+    lobby.isReady = false;
+    lobby.toggleRuleButton();
+    lobby.updateMainButton();
+    if (payload.roomName) {
+        lobby.$roomName.text(payload.roomName);
+    }
+
+    lobby.updatePlayerCounter();
+});
+
+settingsChangeListener.bindListener();
+
+function setLiked(){
+    hostModal.songPopAdvancedSwitch.setOn(false);
+    let disliked = hostModal.$songPopDisliked;
+    let mixed = hostModal.$songPopMixed;
+    let liked = hostModal.$songPopLiked;
+    if (disliked.is(":checked")) {
+        disliked.click();
+    }
+    if (mixed.is(":checked")) {
+        mixed.click();
+    }
+    if (!liked.is(":checked")) {
+        liked.click();
+    }
+}
+
+function resetSongPop(){
+    hostModal.songPopAdvancedSwitch.setOn(false);
+    let disliked = hostModal.$songPopDisliked;
+    let mixed = hostModal.$songPopMixed;
+    let liked = hostModal.$songPopLiked;
+    if (!disliked.is(":checked")) {
+        disliked.click();
+    }
+    if (!mixed.is(":checked")) {
+        mixed.click();
+    }
+    if (!liked.is(":checked")) {
+        liked.click();
+    }
+}
+
+function setAnimeScore(){
+    hostModal.animeScoreAdvancedSwitch.setOn(false);
+    hostModal.$animeScore.slider('setValue', curAnimeScore);
+}
+
+// change song selection to type (1 = random, 2 = mainly watched, 3 = watched only)
+function setSongSelection(type) {
+    hostModal.$songPool.slider('setValue', type);
+}
+
+function setSpeed(speed){
+    hostModal.playbackSpeedRandomSwitch.setOn(false);
+    hostModal.$playbackSpeed.slider('setValue', speed);
+}
+
+function randomize(){
+   hostModal._currentView = 'quiz';
+   hostModal.$RANDOMIZE_BUTTON.click();
+   //hostModal.changeSettings(settingRandomizer.getRandomQuizSettings());
+}
+
+function setLives(life){
+    hostModal.lifeSliderCombo.setValue(life);
+}
+
+function changeTVSelection(on){
+    let tvCheckbox = hostModal.$animeTvCheckbox;
+    if (on) {
+        if (!tvCheckbox.is(":checked")){
+            tvCheckbox.click();
+        }
+    }
+    else if (tvCheckbox.is(":checked")){
+        tvCheckbox.click();
+    }
+}
+
+// reset year ranges and yearIndex
+function resetYears() {
+    curYearRange = [1950, 2020];
+}
+
+// set new difficulty
+function setDifficulty(diffRange) {
+    hostModal.songDiffAdvancedSwitch.setOn(true);
+    hostModal.songDiffRangeSliderCombo.setValue(diffRange);
+}
+
+function setGuessTime(time) {
+    hostModal.playLengthSliderCombo.setValue(time);
+}
+
+// set year setting
+function setYears(yearRange) {
+    hostModal.vintageRangeSliderCombo.setValue(yearRange);
+}
+
+function setTag(){
+    hostModal.tagFilter.clear();
+    let tagID = getTagIDByName(curTag);
+    // check if tag exists
+    if (tagID !== undefined) {
+        hostModal.tagFilter.addValue({
+            id: tagID,
+            state: DROPDOWN_INCLUSION_SETTINGS.INCLUDE // INCLUDE, EXCLUDE or ONE_OFF
+        })
+    }
+    else {
+        // tag not found
+    }
+}
+
+// find tag id by name
+function getTagIDByName(tagName) {
+    let tagObject = hostModal.tagFilter.awesomepleteInstance._list.find(tag => {
+        return tag.name === tagName;
+    });
+    if (tagObject !== undefined) {
+        return tagObject.id;
+    }
+    return undefined;
+}
+
+// remove tag by name
+function removeTagByName(tagName) {
+    $("#mhTagFilter .filterList .filterEntry").each((index, elem) => {
+        if ($(elem).text().includes(tagName)) {
+            $(elem).find(".filterEntryClose").click();
+        }
+    })
+}
+
 
 AMQ_addScriptData({
     name: "AMQ Monopoly",
