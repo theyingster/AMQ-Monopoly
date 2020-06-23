@@ -955,7 +955,7 @@ function setYears(yearRange) {
     hostModal.vintageRangeSliderCombo.setValue(yearRange);
 }
 
-function setTag(){
+function setTag() {
     hostModal.tagFilter.clear();
     let tagID = getTagIDByName(curTag);
     // check if tag exists
