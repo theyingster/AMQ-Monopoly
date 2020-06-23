@@ -666,7 +666,7 @@ function resetScore(){
 ///////////////////////////////////////////////////////////////
 
 let DEFAULT_SETTINGS = {
-		roomName: "testing",
+		roomName: "AMQ Monopoly 20+",
 		privateRoom: false,
 		password: "",
 		roomSize: lobby.players.length,
