@@ -6,10 +6,10 @@ A special gamemode simulating the popular game "Monopoly" that can be played on 
 
 Requires [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en) browser extension to apply the script:
 
-1. Select the script to be installed (do all three steps for both scripts)
+1. Select the script to be installed (only require the AMQ Monopoly.user.js script, the other two scripts are meant for testing)
 2. Click "raw"
 3. Tampermonkey should prompt you to install the script; if it does not, create a new script in dashboard and directly copy paste the code in and save
 
 ## Current Version
 
-Currently requires manually inputting commands into chat and needs both scripts for playing and scoring. I am working on integrating auto-changing settings without manual commands from the host player (testing through the change_settings.user.js file).
+Current has auto setting changes and point system integrated within the main script (AMQ Monopoly.user.js), so only the main script is necessary for functionality. You may choose to use the other two scripts for testing.
