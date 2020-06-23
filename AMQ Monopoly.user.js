@@ -946,6 +946,7 @@ function setDifficulty(diffRange) {
 }
 
 function setGuessTime(time) {
+    hostModal.playLengthRandomSwitch.setOn(false);
     hostModal.playLengthSliderCombo.setValue(time);
 }
 
