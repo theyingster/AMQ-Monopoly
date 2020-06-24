@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AMQ Monopoly
 // @namespace    https://github.com/theyingster
-// @version      1.1.1
+// @version      1.2.1
 // @description  AMQ Monopoly
 // @author       theyingster
 // @match        https://animemusicquiz.com/*
@@ -106,17 +106,33 @@ let defaultTags = ["Female Protagonist","Magic","Idol","Shounen","Cute Girls Doi
 let chosenTags = [];
 let modifiers = [];
 
-let _endResultListener = new Listener("quiz end result", function (payload) {
-    // TODO auto add point to winner
-    //sendChatMessage("zzz");
-    /*
-    for (let player in quiz.players){
-        sendChatMessage("player " + player.name + ": " + player.points + " points");
-        if (player && player.finalPosition == 1){
-            updateScore(player.name());
-        }
-    }*/
+// winners at the end of the round (1st place)
+let winners = [];
 
+let _endResultListener = new Listener("quiz end result", function (payload) {
+    winners = [];
+    payload.resultStates.forEach(result => {
+        let quizPlayer = quiz.players[result.gamePlayerId];
+        if (quizPlayer) {
+            if (result.endPosition == 1) {
+                winners.push(quizPlayer.name);
+            }
+        }
+    });
+    if (winners.length > 1){
+        sendChatMessage("Since multiple players finished first, no points will be awarded this round.");
+    }
+    else if (board.length == 0){
+        sendChatMessage("Please create a scoreboard first using 'Scoreboard'");
+    }
+    else {
+        // Give final winner a point and update ownership of tile
+        let finalWinner = winners[0];
+        sendChatMessage("Congrats! Player @" + finalWinner + " has won the round and is awarded a point.");
+        board[current].owner = finalWinner;
+        sendChatMessage("Done! " + finalWinner + " is now the owner of the current tile.");
+        updateScore(finalWinner);
+    }
 });
 
 _endResultListener.bindListener();
@@ -187,9 +203,13 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
             if (players.length == 0){
                 sendChatMessage("Please create a scoreboard first using 'Scoreboard'");
             }
-            // give the winner of the round a point
-            let message = payload.message.split(" ");
-            updateScore(message[1]);
+            else {
+                // give the winner of the round a point
+                let message = payload.message.split(" ");
+                board[current].owner = message[1];
+                sendChatMessage("Done! " + message[1] + " is now the owner of the current tile.");
+                updateScore(message[1]);
+            }
         }
         else if (payload.message.startsWith("/sub")) {
             if (players.length == 0){
