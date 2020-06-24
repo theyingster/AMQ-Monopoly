@@ -119,11 +119,11 @@ let _endResultListener = new Listener("quiz end result", function (payload) {
             }
         }
     });
-    if (winners.length > 1){
-        sendChatMessage("Since multiple players finished first, no points will be awarded this round.");
-    }
-    else if (board.length == 0){
+    if (board.length == 0){
         sendChatMessage("Please create a scoreboard first using 'Scoreboard'");
+    }
+    else if (winners.length > 1){
+        sendChatMessage("Since multiple players finished first, no points will be awarded this round.");
     }
     else {
         // Give final winner a point and update ownership of tile
