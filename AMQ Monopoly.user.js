@@ -11,6 +11,9 @@
 
 if (!window.setupDocumentDone) return;
 
+// check if listeners should be activated for game or not
+let inGame = false;
+
 // Tile of the board
 class Tile {
   constructor(own, desc) {
@@ -111,29 +114,31 @@ let modifiers = [];
 let winners = [];
 
 let _endResultListener = new Listener("quiz end result", function (payload) {
-    winners = [];
-    payload.resultStates.forEach(result => {
-        let quizPlayer = quiz.players[result.gamePlayerId];
-        if (quizPlayer) {
-            if (result.endPosition == 1) {
-                winners.push(quizPlayer.name);
+    if ( inGame ) {
+        winners = [];
+        payload.resultStates.forEach(result => {
+            let quizPlayer = quiz.players[result.gamePlayerId];
+            if (quizPlayer) {
+                if (result.endPosition == 1) {
+                    winners.push(quizPlayer.name);
+                }
             }
+        });
+        if (board.length == 0){
+            sendChatMessage("Please create a scoreboard first using 'Scoreboard'");
         }
-    });
-    if (board.length == 0){
-        sendChatMessage("Please create a scoreboard first using 'Scoreboard'");
-    }
-    else if (winners.length > 1){
-        sendChatMessage("Since multiple players finished first, no points will be awarded this round.");
-    }
-    else {
-        // Give final winner a point and update ownership of tile
-        let finalWinner = winners[0];
-        sendChatMessage("Congrats! Player @" + finalWinner + " has won the round and is awarded a point.");
-        sendChatMessage("Updating ownership...");
-        board[current].owner = finalWinner;
-        sendChatMessage("Done! " + finalWinner + " is now the owner of the current tile.");
-        updateScore(finalWinner);
+        else if (winners.length > 1){
+            sendChatMessage("Since multiple players finished first, no points will be awarded this round.");
+        }
+        else {
+            // Give final winner a point and update ownership of tile
+            let finalWinner = winners[0];
+            sendChatMessage("Congrats! Player @" + finalWinner + " has won the round and is awarded a point.");
+            sendChatMessage("Updating ownership...");
+            board[current].owner = finalWinner;
+            sendChatMessage("Done! " + finalWinner + " is now the owner of the current tile.");
+            updateScore(finalWinner);
+        }
     }
 });
 
