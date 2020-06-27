@@ -598,7 +598,7 @@ function updateModifiers() {
                 tagless = false;
             }
             else if (modDescription.startsWith("Song selection")){
-                curType = 1;
+                curType = 3; // 3 is watched
                 setSongSelection(curType);
             }
             modifiers.shift();
