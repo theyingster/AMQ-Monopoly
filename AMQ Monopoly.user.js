@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         AMQ Monopoly
 // @namespace    https://github.com/theyingster
-// @version      1.2.1
+// @version      1.1.1
 // @description  AMQ Monopoly
 // @author       theyingster
 // @match        https://animemusicquiz.com/*
 // @grant        none
-// @require      none
+// @require      https://raw.githubusercontent.com/TheJoseph98/AMQ-Scripts/master/common/amqScriptInfo.js
 // ==/UserScript==
 
 if (!window.setupDocumentDone) return;
@@ -78,6 +78,7 @@ function initializeBoard(){
     board.push(new Tile("",chosenTags[7]));
 }
 
+// possible overlapping modifiers with randomize
 let OVERLAP_MODS = ["Playback","Guess time:","Song diff","Song pop"];
 
 
@@ -129,6 +130,7 @@ let _endResultListener = new Listener("quiz end result", function (payload) {
         // Give final winner a point and update ownership of tile
         let finalWinner = winners[0];
         sendChatMessage("Congrats! Player @" + finalWinner + " has won the round and is awarded a point.");
+        sendChatMessage("Updating ownership...");
         board[current].owner = finalWinner;
         sendChatMessage("Done! " + finalWinner + " is now the owner of the current tile.");
         updateScore(finalWinner);
@@ -345,7 +347,7 @@ function tileEventHandler(current){
         sendChatMessage("\"Back in my days, anime wasn't only isekai trash\"");
         sendChatMessage("Year range: 1950-2000");
         modifyMessage = "Year range: 1950-2000";
-        curYearRange = [1950,2000]
+        curYearRange = [1950,2000];
         setYears(curYearRange);
     }
     else if (tile.description === "Kotetsujou"){
@@ -446,7 +448,7 @@ function handleGacha(diceResult) {
         setGuessTime(curGuessTime);
     } else if (diceResult == 4){
         sendChatMessage("No boomers only zoomers.");
-        curYearRange = [2000,2020]
+        curYearRange = [2000,2020];
         setYears(curYearRange);
     } else if (diceResult == 5){
         sendChatMessage("Get those trash songs out :wave:");
@@ -533,20 +535,16 @@ function updateModifiers() {
                     curDiffRange = [0,40];
                     setDifficulty(curDiffRange);
                 }
-                if (modDescription === "Playback Speed x2"){
+                else if (modDescription === "Playback Speed x2"){
                     curSpeed = 1;
                     setSpeed(curSpeed);
                 }
                 else if (modDescription === "Song popularity: Liked"){
                     resetSongPop();
                 }
-                if (modDescription.startsWith("Guess time")){
+                else if (modDescription.startsWith("Guess time")){
                     curGuessTime = 20;
                     setGuessTime(curGuessTime);
-                }
-                if (modDescription.startsWith("Year range")){
-                    curYearRange = [1950,2020];
-                    setYears(curYearRange);
                 }
             }
             else if (modDescription === "Quiz settings Randomized"){
@@ -586,6 +584,10 @@ function updateModifiers() {
             if (modDescription === "Everyone starts with 3 lives"){
                 lives = 1;
             }
+            else if (modDescription.startsWith("Year range")){
+                curYearRange = [1950,2020];
+                setYears(curYearRange);
+            }
             else if (modDescription === "Anime score: 7-10"){
                 curAnimeScore = [2,10];
                 setAnimeScore();
@@ -598,7 +600,7 @@ function updateModifiers() {
                 tagless = false;
             }
             else if (modDescription.startsWith("Song selection")){
-                curType = 3; // 3 is watched
+                curType = 3;
                 setSongSelection(curType);
             }
             modifiers.shift();
@@ -975,7 +977,7 @@ function setYears(yearRange) {
     hostModal.vintageRangeSliderCombo.setValue(yearRange);
 }
 
-function setTag() {
+function setTag(){
     hostModal.tagFilter.clear();
     let tagID = getTagIDByName(curTag);
     // check if tag exists
@@ -1015,6 +1017,8 @@ AMQ_addScriptData({
     name: "AMQ Monopoly",
     author: "theyingster",
     description: `
-        <p>Simulates monopoly on the website animemusicquiz.com</p>
+        <p>Simulates monopoly on the website animemusicquiz.com. More info on my <a href="https://github.com/theyingster/AMQ-Monopoly"> AMQ Monopoly</a> github repository.</p>
+        <p><img src="https://i.imgur.com/qH4ZsiA.png" /></p>
+        <p>Current version supports auto changing settings and updating score/tile ownership after round ends <b>WITH END RESULT SCREEN ONLY</b></p>
     `
 });
