@@ -279,10 +279,13 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
             sendChatMessage("Done! " + message[1] + " is now the owner of the current tile.");
         }
         else if (payload.message.startsWith("/NewGame")) {
+            let playerCount = 0;
             inGame = true;
             hostModal.selectLastMan();
-            //DEFAULT_SETTINGS.roomSize = lobby.players.length;
-            //sendChatMessage(lobby.players.length);
+            for (let playerId in lobby.players) {
+                playerCount ++;
+            }
+            DEFAULT_SETTINGS.roomSize = playerCount;
             hostModal.changeSettings(DEFAULT_SETTINGS);
             setTimeout(() => { lobby.changeGameSettings(); },1);
             sendChatMessage("Creating Scoreboard...");
