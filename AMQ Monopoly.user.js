@@ -11,6 +11,121 @@
 
 if (!window.setupDocumentDone) return;
 
+
+// Default monopoly game settings
+let DEFAULT_SETTINGS = {
+		roomName: "AMQ Monopoly 20+",
+		privateRoom: false,
+		password: "",
+		roomSize: 8,
+		numberOfSongs: 100,
+		modifiers: {
+			skipGuessing: true,
+			skipReplay: true,
+			queueing: true,
+			duplicates: true,
+			lootDropping: true
+		},
+		songSelection: {
+			advancedOn: false,
+			standardValue: 3,
+			advancedValue: {
+				watched: 20,
+				unwatched: 0,
+				random: 0
+			}
+		},
+		showSelection: {
+			watched: 100,
+			unwatched: 0,
+			random: 0
+		},
+		songType: {
+			advancedOn: false,
+			standardValue: {
+				openings: true,
+				endings: true,
+				inserts: true
+			},
+			advancedValue: {
+				openings: 0,
+				endings: 0,
+				inserts: 0,
+				random: 100
+			}
+		},
+		guessTime: {
+			randomOn: false,
+			standardValue: 20,
+			randomValue: [5, 60]
+		},
+		inventorySize: {
+			randomOn: false,
+			standardValue: 20,
+			randomValue: [1, 99]
+		},
+		lootingTime: {
+			randomOn: false,
+			standardValue: 90,
+			randomValue: [10, 150]
+		},
+		lives: 1,
+		samplePoint: {
+			randomOn: true,
+			standardValue: 1,
+			randomValue: [0, 100]
+		},
+		playbackSpeed: {
+			randomOn: false,
+			standardValue: 1,
+			randomValue: [true, true, true, true]
+		},
+		songDifficulity: {
+			advancedOn: true,
+			standardValue: {
+				easy: true,
+				medium: true,
+				hard: true
+			},
+			advancedValue: [0, 40]
+		},
+		songPopularity: {
+			advancedOn: false,
+			standardValue: {
+				disliked: true,
+				mixed: true,
+				liked: true
+			},
+			advancedValue: [0, 100]
+		},
+		playerScore: {
+			advancedOn: false,
+			standardValue: [1, 10],
+			advancedValue: [true, true, true, true, true, true, true, true, true, true]
+		},
+		animeScore: {
+			advancedOn: false,
+			standardValue: [2, 10],
+			advancedValue: [true, true, true, true, true, true, true, true, true]
+		},
+		vintage: {
+			standardValue: {
+				years: [1950, 2020],
+				seasons: [0, 3],
+			},
+			advancedValueList: []
+		},
+		type: {
+			tv: true,
+			movie: true,
+			ova: true,
+			ona: true,
+			special: true
+		},
+		genre: [],
+		tags: []
+	};
+
 // check if listeners should be activated for game or not
 let inGame = false;
 
@@ -164,7 +279,10 @@ let commandListener = new Listener("Game Chat Message", (payload) => {
             sendChatMessage("Done! " + message[1] + " is now the owner of the current tile.");
         }
         else if (payload.message.startsWith("/NewGame")) {
+            inGame = true;
             hostModal.selectLastMan();
+            //DEFAULT_SETTINGS.roomSize = lobby.players.length;
+            //sendChatMessage(lobby.players.length);
             hostModal.changeSettings(DEFAULT_SETTINGS);
             setTimeout(() => { lobby.changeGameSettings(); },1);
             sendChatMessage("Creating Scoreboard...");
@@ -502,6 +620,7 @@ function handleMystery(diceResult, tile) {
             current += 2;
         }
     }
+    current %= 40;
     tileEventHandler(current);
 }
 
@@ -691,119 +810,6 @@ function resetScore(){
 // AMQ MONOPOLY Setting Changing Functions & Variables
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
-
-let DEFAULT_SETTINGS = {
-		roomName: "AMQ Monopoly 20+",
-		privateRoom: false,
-		password: "",
-		roomSize: lobby.players.length,
-		numberOfSongs: 100,
-		modifiers: {
-			skipGuessing: true,
-			skipReplay: true,
-			queueing: true,
-			duplicates: true,
-			lootDropping: true
-		},
-		songSelection: {
-			advancedOn: false,
-			standardValue: 3,
-			advancedValue: {
-				watched: 20,
-				unwatched: 0,
-				random: 0
-			}
-		},
-		showSelection: {
-			watched: 100,
-			unwatched: 0,
-			random: 0
-		},
-		songType: {
-			advancedOn: false,
-			standardValue: {
-				openings: true,
-				endings: true,
-				inserts: true
-			},
-			advancedValue: {
-				openings: 0,
-				endings: 0,
-				inserts: 0,
-				random: 100
-			}
-		},
-		guessTime: {
-			randomOn: false,
-			standardValue: 20,
-			randomValue: [5, 60]
-		},
-		inventorySize: {
-			randomOn: false,
-			standardValue: 20,
-			randomValue: [1, 99]
-		},
-		lootingTime: {
-			randomOn: false,
-			standardValue: 90,
-			randomValue: [10, 150]
-		},
-		lives: 1,
-		samplePoint: {
-			randomOn: true,
-			standardValue: 1,
-			randomValue: [0, 100]
-		},
-		playbackSpeed: {
-			randomOn: false,
-			standardValue: 1,
-			randomValue: [true, true, true, true]
-		},
-		songDifficulity: {
-			advancedOn: true,
-			standardValue: {
-				easy: true,
-				medium: true,
-				hard: true
-			},
-			advancedValue: [0, 40]
-		},
-		songPopularity: {
-			advancedOn: false,
-			standardValue: {
-				disliked: true,
-				mixed: true,
-				liked: true
-			},
-			advancedValue: [0, 100]
-		},
-		playerScore: {
-			advancedOn: false,
-			standardValue: [1, 10],
-			advancedValue: [true, true, true, true, true, true, true, true, true, true]
-		},
-		animeScore: {
-			advancedOn: false,
-			standardValue: [2, 10],
-			advancedValue: [true, true, true, true, true, true, true, true, true]
-		},
-		vintage: {
-			standardValue: {
-				years: [1950, 2020],
-				seasons: [0, 3],
-			},
-			advancedValueList: []
-		},
-		type: {
-			tv: true,
-			movie: true,
-			ova: true,
-			ona: true,
-			special: true
-		},
-		genre: [],
-		tags: []
-	};
 
 let QUIZ_DEFAULT_SETTINGS = {
     guessTime: {
